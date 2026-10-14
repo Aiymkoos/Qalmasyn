@@ -376,3 +376,10 @@ dialog .text-button{color:#8f2a18}
   .row-price .stock-text{grid-column:3;grid-row:1;margin-left:0}
   .row-price .drop-line{grid-column:1/-1;grid-row:2;justify-content:flex-start}
 }
+
+/* route link */
+.route-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-weight:700;font-size:14px;color:var(--red);text-decoration:underline;text-underline-offset:3px}
+.route-link svg{width:16px;height:16px}
+.popup-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.popup-actions .primary{margin-top:0}
+.detail-item .route-link{margin-top:2px}
