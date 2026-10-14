@@ -310,7 +310,7 @@ dialog .text-button{color:#8f2a18}
 .row-text{display:grid;gap:2px;min-width:0}
 .row-text .merchant-row{justify-content:space-between}
 .row-chart{display:grid;gap:4px;min-width:0}
-.row-chart svg{display:block;width:100%;height:auto}
+.row-chart>svg{display:block;width:100%;height:auto}
 .ch-band{fill:color-mix(in srgb,var(--gold) 22%,var(--bg))}
 .ch-line{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
 .ch-now{stroke:var(--alert);stroke-width:1.5;stroke-dasharray:3 3}
