@@ -63,6 +63,7 @@ svg.lucide,i[data-lucide]{width:18px;height:18px;flex:none}
 .search-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
 .search-field{display:flex;align-items:center;gap:10px;flex:1 1 320px;padding:0 16px;height:48px;border:1px solid var(--ink);border-radius:12px}
 .search-field input{flex:1;border:0;background:none;outline:0;min-width:0;font-size:15px}
+.search-field:focus-within{outline:3px solid #1fb6d1;outline-offset:2px}
 .search-field input::placeholder{color:var(--muted)}
 .catalog-caption{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 .filter-button{display:flex;align-items:center;gap:8px;height:48px;padding:0 18px;border:1px solid var(--ink);border-radius:12px;font-weight:600}
@@ -119,8 +120,11 @@ svg.lucide,i[data-lucide]{width:18px;height:18px;flex:none}
 .empty-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:var(--gold);color:#141414}
 
 /* impact line + how it works */
-.impact{margin-block:8px 0;padding-block:18px;border-top:1px solid var(--rule);font-size:15px}
-.impact strong{font-family:Rubik,sans-serif;font-weight:800}
+.impact{display:grid;grid-template-columns:repeat(2,minmax(0,210px)) 1fr;gap:18px 28px;align-items:center;margin-block:8px 0;padding:22px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.impact-stat{display:grid;gap:2px;padding-left:14px;border-left:4px solid var(--gold)}
+.impact-stat span,.impact-stat small{color:var(--muted);font-size:12px;font-weight:600}
+.impact-stat strong{font-family:Rubik,sans-serif;font-size:28px;line-height:1;font-weight:900}
+.impact p{margin:0;max-width:370px;color:var(--muted);font-size:13px;line-height:1.35}
 .how-it-works{padding:36px 0 64px}
 .how-it-works h2{margin:0 0 20px;font-size:clamp(22px,3vw,30px);font-weight:800}
 .how-it-works ol{display:grid;grid-template-columns:repeat(3,1fr);gap:0 44px;margin:0;padding:0;list-style:none}
@@ -138,7 +142,7 @@ svg.lucide,i[data-lucide]{width:18px;height:18px;flex:none}
 #bookings-list{display:grid}
 .booking-card{display:grid;grid-template-columns:128px 1fr auto;gap:18px;align-items:center;padding:20px 0;border-top:1px solid var(--rule)}
 .booking-card img{width:128px;height:128px;object-fit:cover;border-radius:14px}
-.booking-info h2{margin:0 0 4px;font-size:18px}.booking-info p{margin:2px 0;font-size:13px;color:var(--muted)}
+.booking-info h2{margin:0 0 4px;font-size:18px}.booking-info p{margin:2px 0;font-size:13px;color:var(--muted)}.booking-info .route-link{margin-top:7px}
 .booking-ticket{display:grid;gap:4px;justify-items:center;padding:14px 18px;border:1px dashed var(--ink);border-radius:12px;text-align:center;font-size:12px}
 .booking-ticket strong{font-family:Rubik,sans-serif;font-size:22px}
 .text-button{min-height:44px;font-weight:700;font-size:13px;text-decoration:underline;color:var(--ink)}
@@ -220,12 +224,14 @@ dialog .text-button{color:#8f2a18}
 .mobile-nav{display:none}
 
 @media(max-width:900px){
+  .desktop-nav,.business-link{display:none}.header-actions{margin-left:auto}
   .offer-grid{grid-template-columns:1fr}
   .owner-layout,.analytics-grid{grid-template-columns:1fr}
   .how-it-works ol{grid-template-columns:1fr;gap:22px}
 }
 @media(max-width:650px){
   .wrap{padding-inline:16px}
+  .impact{grid-template-columns:1fr 1fr;gap:16px;padding-block:18px}.impact p{grid-column:1/-1}
   .desktop-nav,.business-link{display:none}
   .header-actions{margin-left:auto}
   .clockbar-inner{gap:12px}
@@ -234,7 +240,7 @@ dialog .text-button{color:#8f2a18}
   .mobile-nav button{position:relative;display:grid;justify-items:center;gap:2px;min-width:64px;min-height:44px;color:var(--bg);font-size:11px;font-weight:600}
   .mobile-nav button.active{color:var(--gold)}
   .mobile-nav b.count{position:absolute;top:-2px;right:8px}
-  .form-row:not(.three){grid-template-columns:1fr}
+  .form-row:not(.three),.form-row.three{grid-template-columns:1fr}
   .booking-card{grid-template-columns:96px 1fr}.booking-card img{width:96px;height:96px}.booking-ticket{grid-column:1/3}
   .card-main{grid-template-columns:104px 1fr;gap:14px}
   .search-field input{font-size:16px}
