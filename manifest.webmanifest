@@ -7,7 +7,6 @@
   "theme_color": "#d62400",
   "description": "Находи вечерние предложения рядом и забирай еду со скидкой.",
   "icons": [
-    {"src":"assets/icon-192.png","sizes":"192x192","type":"image/png"},
-    {"src":"assets/icon-512.png","sizes":"512x512","type":"image/png"}
+    {"src":"assets/app-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}
   ]
 }
