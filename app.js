@@ -1,7 +1,7 @@
 'use strict';
 
 // Illustrative local data. No orders, payments or personal details leave this page.
-const offers = [
+let offers = [
   {id:1,restaurant:'Тёплый хлеб',dish:'Пакет свежей выпечки',category:'bakery',oldPrice:3300,price:990,portions:3,pickupStart:'20:00',pickup:'21:00',address:'пр. Бухар-Жырау, 42',district:'center',distance:450,photo:'assets/hero.jpg',initial:'т',description:'Круассан и 2–3 булочки, испечённые сегодня. Состав пакета зависит от того, что останется к вечеру. Содержит пшеницу, молоко и яйца; возможны следы орехов.'},
   {id:2,restaurant:'Karak House',dish:'Японские панкейки с ягодами',category:'dessert',oldPrice:2400,price:1680,portions:2,pickupStart:'20:00',pickup:'22:00',address:'Арбат, Бухар-Жырау 55/7',district:'center',distance:650,photo:'assets/pancakes.jpg',initial:'k',description:'Порция нежных панкейков с ягодами и сливочным кремом. Содержит пшеницу, яйца и молоко. Пример предложения возможного партнёра, а не действующее меню.'},
   {id:3,restaurant:'Daily Coffee',dish:'Кофе и круассан на вечер',category:'cafe',oldPrice:2800,price:1290,portions:4,pickupStart:'19:30',pickup:'21:30',address:'ул. Гоголя, 37',district:'center',distance:850,photo:'assets/coffee.jpg',initial:'d',description:'Капучино 300 мл и классический круассан. Кофе приготовят к вашему приходу. Содержит молоко, пшеницу и яйца. Фотография — пример подачи.'},
@@ -45,11 +45,22 @@ function makeLive(o,floor){
   Object.defineProperty(o,'price',{get(){return livePrice(this);},enumerable:true,configurable:true});
 }
 const floors = {1:500,2:1100,3:700,4:800,5:450,6:1000};
-offers.forEach(o=>makeLive(o,floors[o.id]));
+function prepareOffers(list){
+  offers=list.map(raw=>{
+    const o={...raw};
+    const floor=Number.isFinite(Number(o.floor))?Number(o.floor):(floors[o.id]||0);
+    o.price=Number(o.price);o.oldPrice=Number(o.oldPrice);o.portions=Number(o.portions);
+    makeLive(o,floor);
+    return o;
+  });
+}
+prepareOffers(offers);
 const categories = {bakery:'Выпечка',cafe:'Кафе',grocery:'Продукты',dessert:'Десерты',meal:'Готовая еда'};
 const districts = {all:'Весь город',center:'Центр',southeast:'Юго-Восток',mikhailovka:'Михайловка'};
 const state = {view:'discover',category:'all',district:'all',query:'',sort:'recommended',maxPrice:null,available:true,bigDiscount:false,favorites:new Set(),bookings:[]};
-try {const stored=JSON.parse(localStorage.getItem('qalmasyn-favorites')||'[]');if(Array.isArray(stored))state.favorites=new Set(stored.filter(id=>Number.isInteger(id)&&offers.some(o=>o.id===id)));} catch {}
+try {const stored=JSON.parse(localStorage.getItem('qalmasyn-favorites')||'[]');if(Array.isArray(stored))state.favorites=new Set(stored.filter(Number.isInteger));} catch {}
+try {const stored=JSON.parse(localStorage.getItem('qalmasyn-bookings')||'[]');if(Array.isArray(stored))state.bookings=stored;} catch {}
+function saveBookings(){try{localStorage.setItem('qalmasyn-bookings',JSON.stringify(state.bookings));}catch{}}
 // ---- Map: 2GIS MapGL when a key is set in config.js, otherwise a plain schematic with the same pins ----
 const CENTER = [73.0860, 49.8062];
 // Approximate demo coordinates [lng, lat] for the example venues.
@@ -137,7 +148,7 @@ const money = value=>new Intl.NumberFormat('ru-KZ').format(value)+' ₸';
 const discount = offer=>Math.round((1-offer.price/offer.oldPrice)*100);
 const icon = name=>`<i data-lucide="${name}" aria-hidden="true"></i>`;
 const distance = value=>value==null?'Караганда':value<1000?value+' м':(value/1000).toLocaleString('ru-RU',{maximumFractionDigits:1})+' км';
-const time = offer=>`${offer.pickupStart}–${offer.pickup}`;
+const time = offer=>`${String(offer.pickupStart).slice(0,5)}–${String(offer.pickup).slice(0,5)}`;
 const normalize = value=>String(value).toLocaleLowerCase('ru-RU').replace(/ё/g,'е');
 function icons(){if(window.lucide)window.lucide.createIcons({attrs:{'aria-hidden':'true',focusable:'false'}});}
 let toastTimeout;
@@ -210,7 +221,7 @@ function renderOffers(){
 function renderImpact(){
   const best=Math.max(0,...offers.filter(o=>o.portions>0).map(discount));$('#hero-pct').textContent='−'+best+'%';
   const saved=128+state.bookings.length,co2=Math.round(saved*2.5);
-  $('#impact-portions').textContent=saved;$('#impact-co2').textContent=co2+' кг';
+  $('#impact-portions').textContent=saved;$('#impact-co2').textContent=co2;
   const sales=[2,5,9,6],max=Math.max(...sales);
   $('#demand-chart').innerHTML=['19:00','20:00','21:00','22:00'].map((h,i)=>`<div class="bar-col"><span class="bar-value">${sales[i]}</span><span class="bar" style="height:${Math.round(sales[i]/max*100)}%"></span><span class="bar-label">${h}</span></div>`).join('');
 }
@@ -245,15 +256,26 @@ function bookingForm(){
   $('#dialog-content').innerHTML=`<div class="dialog-body"><h2 id="dialog-title">Сохраним вкусное<br>для тебя</h2><div class="booking-summary"><strong>${escapeHTML(offer.restaurant)}</strong><br>${escapeHTML(offer.dish)} · 1 шт.<br>Сегодня, ${time(offer)}</div><form id="booking-form"><label class="field">Твоё имя<input name="guestName" id="guest-name" autocomplete="given-name" required maxlength="80" placeholder="Как к тебе обращаться?"></label><label class="field">Номер телефона<input name="phone" autocomplete="tel" type="tel" required maxlength="24" placeholder="+7 (7XX) XXX-XX-XX"></label><p class="form-hint">Оплата при получении. Для демонстрации можно указать вымышленные данные.</p><p id="booking-error" class="error" role="alert" hidden></p><p class="hold-line">${icon('lock')}Цена зафиксирована: <strong id="hold-timer">5:00</strong></p><div class="booking-total"><span>Итого · 1 шт.</span><strong id="hold-total">${money(hold.price)}</strong></div><button class="primary wide" type="submit">Подтвердить тестовую бронь ${icon('check')}</button><p class="dialog-demo">${icon('shield-check')}Данные остаются в текущей странице и исчезнут после её обновления.</p></form></div>`;
   icons();offerDialog.scrollTop=0;$('#guest-name').focus({preventScroll:true});
 }
-function confirmBooking(form){
-  if(!selectedOffer||selectedOffer.portions<1){setError('#booking-error','Эту порцию уже разобрали. Выбери другое предложение.');return;}
+let bookingPending=false;
+async function confirmBooking(form){
+  if(bookingPending)return;
+  const offer=selectedOffer;
+  if(!offer||offer.portions<1){setError('#booking-error','Эту порцию уже разобрали. Выбери другое предложение.');return;}
   const name=form.elements.guestName.value.trim(),phone=form.elements.phone.value.trim();
   if(!name){setError('#booking-error','Укажи имя.');return;}
   if(!/^[+\d\s()-]+$/.test(phone)||!/^\d{10,15}$/.test(phone.replace(/\D/g,''))){setError('#booking-error','Укажи номер с кодом страны: +7 700 000 00 00.');return;}
   let code;do{code='Q-'+Math.random().toString(36).slice(2,7).toUpperCase();}while(state.bookings.some(b=>b.code===code));
-  const booking={...selectedOffer,price:hold?hold.price:selectedOffer.price,code,name,phone};stopHold();selectedOffer.portions--;state.bookings.push(booking);renderOffers();renderBookings();
-  $('#dialog-content').innerHTML=`<div class="dialog-body success-body"><span class="success-icon">${icon('check')}</span><span class="demo-badge">Тестовая бронь</span><h2 id="dialog-title" tabindex="-1">Вкусный вечер<br>почти в руках!</h2><p>${escapeHTML(booking.restaurant)}<br>Сегодня, ${time(booking)}</p><strong class="reservation-code">${booking.code}</strong><p>Код для получения · ${money(booking.price)}<br>${escapeHTML(booking.address)}</p><button class="primary wide" data-view="bookings">Перейти к моим броням ${icon('arrow-right')}</button><p>Это демонстрация. Реальный заказ не создан.</p></div>`;
-  icons();offerDialog.scrollTop=0;$('#dialog-title').focus({preventScroll:true});selectedOffer=null;
+  const booking={...offer,price:hold?hold.price:offer.price,code,name,phone};
+  const finalize=()=>{offer.portions--;state.bookings.push(booking);saveBookings();renderOffers();renderBookings();
+    $('#dialog-content').innerHTML=`<div class="dialog-body success-body"><span class="success-icon">${icon('check')}</span><span class="demo-badge">Бронь подтверждена</span><h2 id="dialog-title" tabindex="-1">Вкусный вечер<br>почти в руках!</h2><p>${escapeHTML(booking.restaurant)}<br>Сегодня, ${time(booking)}</p><strong class="reservation-code">${booking.code}</strong><p>Код для получения · ${money(booking.price)}<br>${escapeHTML(booking.address)}</p><a class="primary wide" target="_blank" rel="noopener" href="${routeUrl(booking)}">${icon('route')}Открыть маршрут</a><button class="text-button wide" data-view="bookings">Мои брони</button><p class="dialog-demo">Демо-проект: оплата при получении.</p></div>`;
+    icons();offerDialog.scrollTop=0;$('#dialog-title').focus({preventScroll:true});selectedOffer=null;
+  };
+  if(!window.QalmasynDB?.enabled){stopHold();finalize();return;}
+  bookingPending=true;
+  const submit=form.querySelector('button[type="submit"]');if(submit){submit.disabled=true;submit.textContent='Сохраняем бронь…';}
+  try{const remote=await window.QalmasynDB.createBooking(booking);if(remote?.code)booking.code=remote.code;stopHold();finalize();}
+  catch{setError('#booking-error','Не удалось подтвердить бронь. Проверь интернет и попробуй ещё раз.');if(submit){submit.disabled=false;submit.textContent='Подтвердить тестовую бронь';icons();}}
+  finally{bookingPending=false;}
 }
 function tickHold(){
   if(!hold||!selectedOffer||!offerDialog.open){stopHold();return;}
@@ -263,12 +285,12 @@ function tickHold(){
 }
 function renderBookings(){
   $('#bookings-empty').hidden=!!state.bookings.length;
-  $('#bookings-list').innerHTML=[...state.bookings].reverse().map(b=>`<article class="booking-card">${b.photo?`<img src="${escapeHTML(b.photo)}" alt="${escapeHTML(b.dish)}">`:''}<div class="booking-info"><h2>${escapeHTML(b.restaurant)}</h2><p>${escapeHTML(b.dish)} · ${money(b.price)}</p><p class="pickup-line">${icon('clock-3')}Сегодня, ${time(b)}</p><p>${escapeHTML(b.address)}</p></div><div class="booking-ticket"><span>Код тестовой брони</span><strong>${b.code}</strong><button class="text-button" data-cancel="${b.code}">Отменить бронь</button></div></article>`).join('');
+  $('#bookings-list').innerHTML=[...state.bookings].reverse().map(b=>`<article class="booking-card">${b.photo?`<img src="${escapeHTML(b.photo)}" alt="${escapeHTML(b.dish)}">`:''}<div class="booking-info"><h2>${escapeHTML(b.restaurant)}</h2><p>${escapeHTML(b.dish)} · ${money(b.price)}</p><p class="pickup-line">${icon('clock-3')}Сегодня, ${time(b)}</p><p>${escapeHTML(b.address)}</p><a class="route-link" href="${routeUrl(b)}" target="_blank" rel="noopener">${icon('route')}Построить маршрут в 2GIS</a></div><div class="booking-ticket"><span>Код брони</span><strong>${b.code}</strong><button class="text-button" data-cancel="${b.code}">Отменить бронь</button></div></article>`).join('');
   $('#owner-booking-count').textContent='· '+state.bookings.length;
   $('#owner-bookings').innerHTML=state.bookings.length?[...state.bookings].reverse().map(b=>`<article class="owner-booking"><h3>${b.code} · ${escapeHTML(b.restaurant)}</h3><p>${escapeHTML(b.dish)} · ${money(b.price)} · 1 шт.</p><p>${escapeHTML(b.name)} · ${escapeHTML(b.phone)}</p><p>Самовывоз ${time(b)} · оплата при получении</p></article>`).join(''):'<p class="demo-inline">Здесь появятся тестовые брони гостей.</p>';
   badgeCounts();icons();
 }
-function cancelBooking(code){const index=state.bookings.findIndex(b=>b.code===code);if(index<0)return;const offer=offers.find(o=>o.id===state.bookings[index].id);if(offer)offer.portions++;state.bookings.splice(index,1);renderOffers();renderBookings();toast('Бронь отменена. Находка снова в витрине.');const focus=$('#bookings-list [data-cancel]')||$('#bookings-empty .primary');if(focus)focus.focus({preventScroll:true});}
+async function cancelBooking(code){const index=state.bookings.findIndex(b=>b.code===code);if(index<0)return;const button=$(`[data-cancel="${code}"]`);if(button){button.disabled=true;button.textContent='Отменяем…';}try{if(window.QalmasynDB?.enabled)await window.QalmasynDB.cancelBooking(code);const offer=offers.find(o=>o.id===state.bookings[index].id);if(offer)offer.portions++;state.bookings.splice(index,1);saveBookings();renderOffers();renderBookings();toast('Бронь отменена. Находка снова в витрине.');const focus=$('#bookings-list [data-cancel]')||$('#bookings-empty .primary');if(focus)focus.focus({preventScroll:true});}catch{if(button){button.disabled=false;button.textContent='Отменить бронь';}toast('Не удалось отменить бронь. Попробуй ещё раз.');}}
 offerDialog.addEventListener('close',()=>{stopHold();selectedOffer=null;if(state.view===dialogOriginView){const target=dialogTrigger?.isConnected?dialogTrigger:dialogTrigger?.dataset.offer?$(`#${state.view}-view [data-offer="${dialogTrigger.dataset.offer}"]`):null;if(target)target.focus({preventScroll:true});}});
 
 function resetFilters(){state.maxPrice=null;state.available=true;state.bigDiscount=false;$('#filter-form').reset();}
@@ -325,6 +347,11 @@ $('#offer-form').addEventListener('submit',function(event){
   if(f.dynamic.checked&&toMinutes(f.pickup.value)<=toMinutes(f.pickupStart.value)){setError('#offer-error','Для динамической цены время «до» должно быть позже времени «с».');return;}
   const created={id:Math.max(...offers.map(o=>o.id))+1,restaurant,dish,description,address,price,oldPrice,portions,category:f.category.value,district:f.district.value,pickupStart:f.pickupStart.value,pickup:f.pickup.value,photo:uploadedPhoto,distance:null,initial:restaurant.slice(0,1).toLocaleLowerCase()};
   makeLive(created,floor);offers.unshift(created);
+  if(window.QalmasynDB?.enabled){
+    window.QalmasynDB.createOffer({...created,floor}).then(remote=>{
+      if(remote){const index=offers.indexOf(created);if(index>=0){const next={...remote};makeLive(next,Number(remote.floor)||0);next.coords=null;offers[index]=next;renderOffers();}}
+    }).catch(()=>toast('Предложение показано только в этом браузере: база пока недоступна.'));
+  }
   // Clear previous discovery constraints so a newly published offer is visible.
   resetSearch();state.sort='recommended';$('#sort').value='recommended';renderOffers();setError('#offer-error','');
   $('#publish-notice').textContent='«'+dish+'» добавлено. Открой «Найти вкусное», чтобы посмотреть карточку.';$('#publish-notice').hidden=false;
@@ -332,4 +359,12 @@ $('#offer-form').addEventListener('submit',function(event){
   toast('Предложение появилось в демо-витрине');
 });
 $('#filter-button').setAttribute('aria-label','Фильтры предложений');
-renderOffers();renderBookings();showView(location.hash.slice(1)||'discover',false);icons();
+async function start(){
+  if(window.QalmasynDB?.enabled){
+    try{const remoteOffers=await window.QalmasynDB.loadOffers();if(Array.isArray(remoteOffers)){prepareOffers(remoteOffers);offers.forEach(o=>o.coords=COORDS[o.id]||null);updateDistances();}}
+    catch{toast('Не удалось загрузить базу. Показаны демонстрационные предложения.');}
+  }
+  renderOffers();renderBookings();showView(location.hash.slice(1)||'discover',false);icons();
+}
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+start();
