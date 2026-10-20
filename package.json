@@ -1,0 +1,10 @@
+{
+  "name": "qalmasyn",
+  "private": true,
+  "scripts": {
+    "test": "node --test --test-concurrency=1"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
