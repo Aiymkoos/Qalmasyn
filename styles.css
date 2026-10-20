@@ -258,6 +258,10 @@ dialog .text-button{color:#8f2a18}
 .watch-form .field{margin:0}
 .watch-form .text-button{padding:0 4px}
 @media(max-width:650px){.header-inner{gap:12px}}
+@media(max-width:380px){
+  .header-inner{flex-wrap:wrap;gap:4px 12px;padding-block:8px}
+  .clockbar{top:100px}
+}
 
 /* help, similar offers, watch list */
 .help{margin:0 0 16px;padding:10px 12px;border-radius:10px;background:#ffe9df;font-size:13px}
@@ -353,7 +357,7 @@ dialog .text-button{color:#8f2a18}
 .hero-pct span{font-size:13px;max-width:150px;line-height:1.25}
 .hold-line{background:#ffe9df}
 .watch-form{border-top-color:#f0d9cc}
-@media(max-width:900px){.hero-inner{grid-template-columns:1fr}.hero-visual{justify-self:start;width:min(280px,70%)}}
+@media(max-width:900px){.hero-inner{grid-template-columns:minmax(0,1fr)}.hero-visual{justify-self:start;width:min(280px,70%)}}
 
 /* phone: stack name, price and chart; smaller hero plate */
 @media(max-width:900px){
@@ -372,7 +376,7 @@ dialog .text-button{color:#8f2a18}
 }
 @media(max-width:650px){
   .hero-visual{display:flex;align-items:center;gap:16px;width:100%;aspect-ratio:auto;justify-self:stretch}
-  .hero-visual img{width:150px;height:150px;flex:none}
+  .hero-visual img{width:150px;height:auto;aspect-ratio:1;min-width:0;flex:0 1 150px}
   .hero-pct{position:static}
 }
 @media(max-width:900px){
